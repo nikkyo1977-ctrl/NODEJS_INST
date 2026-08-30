@@ -50,9 +50,10 @@ export const Scene7CTA: React.FC = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          gap: space.lg,
-          padding: 80,
+          paddingTop: 140,
+          paddingLeft: 80,
+          paddingRight: 80,
+          boxSizing: "border-box",
         }}
       >
         <div
@@ -60,6 +61,9 @@ export const Scene7CTA: React.FC = () => {
             ...type.display,
             color: color.text,
             ...wipe(frame, titleAt, DUR.slow),
+            textAlign: "center",
+            height: 120,
+            lineHeight: "120px",
           }}
         >
           Install Node.js.
@@ -70,6 +74,10 @@ export const Scene7CTA: React.FC = () => {
             ...type.h2,
             color: color.accent,
             ...wipe(frame, subtitleAt),
+            textAlign: "center",
+            marginTop: space.sm,
+            height: 56,
+            lineHeight: "56px",
           }}
         >
           Unlock the future of FEM automation.
@@ -78,7 +86,7 @@ export const Scene7CTA: React.FC = () => {
         <div
           style={{
             width: 900,
-            marginTop: space.lg,
+            marginTop: space.xl,
             ...fadeIn(frame, terminalAt, DUR.base),
           }}
         >
@@ -89,8 +97,11 @@ export const Scene7CTA: React.FC = () => {
           style={{
             ...type.bodyLg,
             color: color.textMute,
-            marginTop: space.lg,
+            marginTop: space.xl,
             ...wipe(frame, taglineAt),
+            textAlign: "center",
+            height: 48,
+            lineHeight: "48px",
           }}
         >
           One install. Infinite possibilities.

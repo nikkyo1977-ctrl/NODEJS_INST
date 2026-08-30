@@ -34,9 +34,11 @@ export const Scene6Applications: React.FC = () => {
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr 1fr",
+          gridAutoRows: "72px",
           gap: space.md,
           flex: 1,
           alignContent: "center",
+          boxSizing: "border-box",
         }}
       >
         {ITEMS.map((item, i) => {
@@ -54,7 +56,9 @@ export const Scene6Applications: React.FC = () => {
                 backgroundColor: color.surface,
                 border: "1px solid " + color.line,
                 borderRadius: radius.md,
-                padding: space.md,
+                padding: "0 " + space.md + "px",
+                height: 72,
+                boxSizing: "border-box",
                 ...wipe(frame, at, DUR.base),
               }}
             >

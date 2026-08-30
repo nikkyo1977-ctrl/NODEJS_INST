@@ -43,6 +43,9 @@ export const Scene3Comparison: React.FC = () => {
           ...type.label,
           color: color.textFaint,
           paddingBottom: space.sm,
+          height: 32,
+          lineHeight: "32px",
+          boxSizing: "border-box",
           ...wipe(frame, headerAt),
         }}
       >
@@ -59,7 +62,8 @@ export const Scene3Comparison: React.FC = () => {
             style={{
               display: "flex",
               alignItems: "center",
-              padding: space.sm + "px 0",
+              height: 48,
+              boxSizing: "border-box",
               borderBottom: "1px solid " + color.line,
               ...wipe(frame, at),
             }}

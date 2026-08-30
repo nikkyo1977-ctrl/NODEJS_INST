@@ -35,7 +35,7 @@ export const Scene4TimeSaving: React.FC = () => {
       eyebrow="Time Saving"
       title="Five steps, or one command"
     >
-      <div style={{ display: "flex", gap: space.xxl, flex: 1, minHeight: 0 }}>
+      <div style={{ display: "flex", gap: space.xxl, flex: 1, minHeight: 0, alignItems: "flex-start" }}>
         <div
           style={{
             flex: 0.8,
@@ -49,6 +49,8 @@ export const Scene4TimeSaving: React.FC = () => {
               ...type.label,
               color: color.bad,
               marginBottom: space.xs,
+              height: 24,
+              lineHeight: "24px",
             }}
           >
             Manual
@@ -64,6 +66,10 @@ export const Scene4TimeSaving: React.FC = () => {
                   padding: space.xs + "px " + space.md + "px",
                   ...type.body,
                   color: color.textMute,
+                  height: 48,
+                  boxSizing: "border-box",
+                  display: "flex",
+                  alignItems: "center",
                   ...wipe(frame, at),
                 }}
               >
@@ -77,6 +83,7 @@ export const Scene4TimeSaving: React.FC = () => {
               display: "flex",
               alignItems: "center",
               gap: space.sm,
+              height: 36,
               ...wipe(frame, firstManualAt + 5 * STAGGER.tight),
             }}
           >
@@ -101,7 +108,7 @@ export const Scene4TimeSaving: React.FC = () => {
             gap: space.md,
           }}
         >
-          <div style={{ ...type.label, color: color.accent }}>Agentic</div>
+          <div style={{ ...type.label, color: color.accent, height: 24, lineHeight: "24px" }}>Agentic</div>
           <Terminal
             lines={SESSION}
             startAt={terminalAt}

@@ -14,32 +14,46 @@ export const CommandLine: React.FC<Props> = ({ text, startAt }) => {
   const t = typing(frame, text, startAt);
   const started = frame >= startAt;
 
+  // Mostra sempre il prompt '$' e il testo digitato
+  const promptChar = text.startsWith("$") ? "$" : ">";
+  const typedBody = t.visible.startsWith("$ ")
+    ? t.visible.slice(2)
+    : t.visible.startsWith("$")
+    ? t.visible.slice(1)
+    : t.visible;
+
   return (
     <div
       style={{
+        height: 56,
+        minHeight: 56,
+        maxHeight: 56,
+        flex: "none",
         borderTop: "1px solid " + color.line,
-        paddingTop: space.md,
+        paddingTop: space.sm,
         display: "flex",
         alignItems: "center",
         gap: space.xs,
         opacity: started ? 1 : 0,
         ...type.mono,
         color: color.text,
+        boxSizing: "border-box",
+        lineHeight: "36px",
       }}
     >
-      <span style={{ color: color.accent }}>{t.visible.slice(0, 1)}</span>
-      <span>{t.visible.slice(1)}</span>
-      {t.caret ? (
-        <span
-          style={{
-            display: "inline-block",
-            width: 14,
-            height: 34,
-            backgroundColor: color.accent,
-            marginLeft: 2,
-          }}
-        />
-      ) : null}
+      <span style={{ color: color.accent, flex: "none" }}>{promptChar} </span>
+      <span style={{ whiteSpace: "pre" }}>{typedBody}</span>
+      <span
+        style={{
+          display: "inline-block",
+          width: 14,
+          height: 30,
+          backgroundColor: t.caret ? color.accent : "transparent",
+          marginLeft: 2,
+          flex: "none",
+          verticalAlign: "middle",
+        }}
+      />
     </div>
   );
 };

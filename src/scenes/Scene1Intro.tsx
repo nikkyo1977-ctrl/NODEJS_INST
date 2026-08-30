@@ -31,6 +31,7 @@ export const Scene1Intro: React.FC = () => {
           flex: 1,
           alignItems: "center",
           gap: space.xxl,
+          boxSizing: "border-box",
         }}
       >
         <div
@@ -52,7 +53,9 @@ export const Scene1Intro: React.FC = () => {
                   display: "flex",
                   alignItems: "center",
                   gap: space.md,
-                  padding: space.sm + "px " + space.lg + "px",
+                  padding: "0 " + space.lg + "px",
+                  height: 64,
+                  boxSizing: "border-box",
                   backgroundColor: color.surface,
                   border:
                     "1px solid " +
@@ -122,6 +125,8 @@ export const Scene1Intro: React.FC = () => {
         style={{
           ...type.h2,
           color: color.textMute,
+          height: 52,
+          lineHeight: "52px",
           ...wipe(frame, subtitleAt),
         }}
       >

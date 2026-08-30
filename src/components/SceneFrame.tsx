@@ -65,6 +65,7 @@ export const SceneFrame: React.FC<Props> = ({
           display: "flex",
           flexDirection: "column",
           color: color.text,
+          boxSizing: "border-box",
         }}
       >
         <div
@@ -72,6 +73,9 @@ export const SceneFrame: React.FC<Props> = ({
             ...type.label,
             color: color.textFaint,
             ...wipe(frame, HEAD_EYEBROW_AT, DUR.fast),
+            height: 24,
+            lineHeight: "24px",
+            flex: "none",
           }}
         >
           {pad(index)} / {eyebrow}
@@ -82,6 +86,9 @@ export const SceneFrame: React.FC<Props> = ({
             ...type.h1,
             marginTop: space.sm,
             ...wipe(frame, HEAD_TITLE_AT),
+            height: 84,
+            lineHeight: "84px",
+            flex: "none",
           }}
         >
           {title}
@@ -93,6 +100,7 @@ export const SceneFrame: React.FC<Props> = ({
             marginTop: space.md,
             backgroundColor: color.accent,
             width: extend(frame, HEAD_RULE_AT, 120),
+            flex: "none",
           }}
         />
 
@@ -103,14 +111,25 @@ export const SceneFrame: React.FC<Props> = ({
             flexDirection: "column",
             marginTop: space.xl,
             minHeight: 0,
+            boxSizing: "border-box",
           }}
         >
           {children}
         </div>
 
-        {command && typeof commandAt === "number" ? (
-          <CommandLine text={command} startAt={commandAt} />
-        ) : null}
+        <div
+          style={{
+            height: 56,
+            minHeight: 56,
+            maxHeight: 56,
+            flex: "none",
+            boxSizing: "border-box",
+          }}
+        >
+          {command && typeof commandAt === "number" ? (
+            <CommandLine text={command} startAt={commandAt} />
+          ) : null}
+        </div>
       </AbsoluteFill>
     </AbsoluteFill>
   );

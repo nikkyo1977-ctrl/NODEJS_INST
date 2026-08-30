@@ -42,6 +42,7 @@ export const Terminal: React.FC<Props> = ({ lines, startAt, title }) => {
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -51,6 +52,9 @@ export const Terminal: React.FC<Props> = ({ lines, startAt, title }) => {
           gap: space.xs,
           padding: space.sm + "px " + space.md + "px",
           borderBottom: "1px solid " + color.line,
+          flex: "none",
+          height: 48,
+          boxSizing: "border-box",
         }}
       >
         <span
@@ -99,25 +103,40 @@ export const Terminal: React.FC<Props> = ({ lines, startAt, title }) => {
       >
         {lines.map((line, i) => {
           const at = schedule[i];
-          if (frame < at) return null;
+          const isVisible = frame >= at;
 
           if (line.kind === "command") {
             const t = typing(frame, line.text, at);
             return (
-              <div key={i} style={{ ...type.mono, color: color.text }}>
-                <span style={{ color: color.accent }}>{"$ "}</span>
-                {t.visible}
-                {t.caret && !t.done ? (
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: 14,
-                      height: 30,
-                      backgroundColor: color.accent,
-                      verticalAlign: "-4px",
-                    }}
-                  />
-                ) : null}
+              <div
+                key={i}
+                style={{
+                  ...type.mono,
+                  color: color.text,
+                  opacity: isVisible ? 1 : 0,
+                  height: 42,
+                  lineHeight: "42px",
+                  display: "flex",
+                  alignItems: "center",
+                  boxSizing: "border-box",
+                }}
+              >
+                <span style={{ color: color.accent, flex: "none" }}>
+                  {"$ "}
+                </span>
+                <span style={{ whiteSpace: "pre" }}>{t.visible}</span>
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 14,
+                    height: 28,
+                    backgroundColor:
+                      t.caret && !t.done ? color.accent : "transparent",
+                    marginLeft: 2,
+                    flex: "none",
+                    verticalAlign: "middle",
+                  }}
+                />
               </div>
             );
           }
@@ -125,7 +144,15 @@ export const Terminal: React.FC<Props> = ({ lines, startAt, title }) => {
           return (
             <div
               key={i}
-              style={{ ...type.mono, fontSize: 30, color: colorFor(line.kind) }}
+              style={{
+                ...type.mono,
+                fontSize: 30,
+                color: colorFor(line.kind),
+                opacity: isVisible ? 1 : 0,
+                height: 38,
+                lineHeight: "38px",
+                boxSizing: "border-box",
+              }}
             >
               {line.kind === "output" ? "› " : ""}
               {line.text}

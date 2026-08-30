@@ -273,7 +273,7 @@ export const timingWarnings = (scenes: SceneSpec[] = SCENES): string[] => {
 npm test
 ```
 
-Atteso: PASS, 6 test.
+Atteso: PASS, 7 test.
 
 - [ ] **Step 6: Verificare i tipi**
 

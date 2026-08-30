@@ -50,6 +50,7 @@ Gli still vanno in `C:\Users\nikky\AppData\Local\Temp\claude\C--Users-nikky-Desk
 | `src/components/Terminal.tsx` | Finestra terminale con output progressivo. |
 | `src/components/Metric.tsx` | Numero con contatore. |
 | `src/components/SceneFrame.tsx` | Telaio comune di scena. |
+| `src/scenes/registry.ts` | Mappa `SceneId → componente`, condivisa da `Root` e `NodeJDVideo`. |
 | `src/scenes/*.tsx` | Assemblaggio dichiarativo delle 7 scene. |
 | `src/NodeJDVideo.tsx` · `src/Root.tsx` | Composizione, durate importate da `timing.ts`. |
 | `tests/*.test.ts` | Test dei moduli puri. |
@@ -77,7 +78,7 @@ Chiude il difetto "durate duplicate tra `Root.tsx` e `NodeJDVideo.tsx`" e instal
   - `sceneFrames(id: SceneId): number`
   - `totalFrames(): number`
   - `sceneStartFrame(id: SceneId): number`
-  - `timingWarnings(): string[]`
+  - `timingWarnings(scenes?: SceneSpec[]): string[]` — l'argomento opzionale esiste perché i test possano passare dati propri senza mutare `SCENES`
 
 - [ ] **Step 1: Installare Vitest e aggiungere lo script**
 
@@ -148,14 +149,22 @@ describe("timing", () => {
   });
 
   it("segnala una scena la cui ultima rivelazione cade troppo presto", () => {
-    const sano = SCENES.find((s) => s.id === "security");
-    if (!sano) throw new Error("scena security assente");
-    const originale = sano.lastRevealAt;
-    sano.lastRevealAt = 10; // 10 frame su 360: 2,8% della scena
-    const avvisi = timingWarnings();
-    sano.lastRevealAt = originale;
+    // dati propri: il test non tocca mai SCENES, così un fallimento non
+    // lascia il modulo in uno stato corrotto per i test successivi
+    const avvisi = timingWarnings([
+      { id: "security", compositionId: "X", seconds: 12, lastRevealAt: 10 },
+    ]);
     expect(avvisi.length).toBe(1);
     expect(avvisi[0]).toContain("security");
+    expect(avvisi[0]).toContain("Tempo morto");
+  });
+
+  it("segnala una scena la cui ultima rivelazione cade oltre la fine", () => {
+    const avvisi = timingWarnings([
+      { id: "cta", compositionId: "X", seconds: 10, lastRevealAt: 400 },
+    ]);
+    expect(avvisi.length).toBe(1);
+    expect(avvisi[0]).toContain("troncato");
   });
 });
 ```
@@ -235,10 +244,10 @@ export const sceneStartFrame = (id: SceneId): number => {
  * scena (Scena 3 completava a frame 285 su 540). Questo controllo lo rende
  * strutturalmente non ripetibile invece che corretto una volta sola.
  */
-export const timingWarnings = (): string[] => {
+export const timingWarnings = (scenes: SceneSpec[] = SCENES): string[] => {
   const warnings: string[] = [];
-  for (let i = 0; i < SCENES.length; i++) {
-    const s = SCENES[i];
+  for (let i = 0; i < scenes.length; i++) {
+    const s = scenes[i];
     const duration = s.seconds * FPS;
     const ratio = s.lastRevealAt / duration;
     if (ratio < 0.8) {
@@ -2198,30 +2207,32 @@ git commit -m "feat(scene7): chiusura con il comando di installazione come pay-o
 Elimina la duplicazione delle durate e sostituisce le sei `fade()` identiche.
 
 **Files:**
+- Create: `src/scenes/registry.ts`
 - Modify: `src/Root.tsx` (riscrittura completa)
 - Modify: `src/NodeJDVideo.tsx` (riscrittura completa)
 
 **Interfaces:**
 - Consumes: `SCENES`, `FPS`, `TRANSITION_FRAMES`, `totalFrames`, `sceneFrames`, `timingWarnings` da `timing.ts`; le 7 scene
-- Produces: composizioni registrate con le durate corrette.
+- Produces:
+  - `SCENE_COMPONENTS: Record<SceneId, React.FC>` da `registry.ts`
+  - composizioni registrate con le durate corrette
 
-- [ ] **Step 1: Riscrivere `src/Root.tsx`**
+- [ ] **Step 1: Creare `src/scenes/registry.ts`**
 
-```tsx
-import "./index.css";
+La mappa scena → componente serve sia a `Root` sia a `NodeJDVideo`. Definirla due volte ricrea in piccolo la doppia fonte di verità che questo task elimina.
+
+```ts
 import React from "react";
-import { Composition, Folder } from "remotion";
-import { NodeJDVideo } from "./NodeJDVideo";
-import { FPS, SCENES, sceneFrames, timingWarnings, totalFrames } from "./design/timing";
-import { Scene1Intro } from "./scenes/Scene1Intro";
-import { Scene2Solution } from "./scenes/Scene2Solution";
-import { Scene3Comparison } from "./scenes/Scene3Comparison";
-import { Scene4TimeSaving } from "./scenes/Scene4TimeSaving";
-import { Scene5Security } from "./scenes/Scene5Security";
-import { Scene6Applications } from "./scenes/Scene6Applications";
-import { Scene7CTA } from "./scenes/Scene7CTA";
+import { SceneId } from "../design/timing";
+import { Scene1Intro } from "./Scene1Intro";
+import { Scene2Solution } from "./Scene2Solution";
+import { Scene3Comparison } from "./Scene3Comparison";
+import { Scene4TimeSaving } from "./Scene4TimeSaving";
+import { Scene5Security } from "./Scene5Security";
+import { Scene6Applications } from "./Scene6Applications";
+import { Scene7CTA } from "./Scene7CTA";
 
-const COMPONENTS = {
+export const SCENE_COMPONENTS: Record<SceneId, React.FC> = {
   problem: Scene1Intro,
   solution: Scene2Solution,
   comparison: Scene3Comparison,
@@ -2230,14 +2241,27 @@ const COMPONENTS = {
   applications: Scene6Applications,
   cta: Scene7CTA,
 };
+```
+
+- [ ] **Step 2: Riscrivere `src/Root.tsx`**
+
+```tsx
+import "./index.css";
+import React from "react";
+import { Composition, Folder } from "remotion";
+import { NodeJDVideo } from "./NodeJDVideo";
+import { FPS, SCENES, sceneFrames, timingWarnings, totalFrames } from "./design/timing";
+import { SCENE_COMPONENTS } from "./scenes/registry";
 
 export const RemotionRoot: React.FC = () => {
-  // avvisa in studio se una scena lascia tempo morto in coda
-  const warnings = timingWarnings();
-  for (let i = 0; i < warnings.length; i++) {
-    // eslint-disable-next-line no-console
-    console.warn("[timing] " + warnings[i]);
-  }
+  // avvisa in studio se una scena lascia tempo morto in coda;
+  // in un effetto, così non gira a ogni render
+  React.useEffect(() => {
+    const warnings = timingWarnings();
+    for (let i = 0; i < warnings.length; i++) {
+      console.warn("[timing] " + warnings[i]);
+    }
+  }, []);
 
   return (
     <>
@@ -2254,7 +2278,7 @@ export const RemotionRoot: React.FC = () => {
           <Composition
             key={scene.id}
             id={scene.compositionId}
-            component={COMPONENTS[scene.id]}
+            component={SCENE_COMPONENTS[scene.id]}
             durationInFrames={sceneFrames(scene.id)}
             fps={FPS}
             width={1920}
@@ -2267,7 +2291,7 @@ export const RemotionRoot: React.FC = () => {
 };
 ```
 
-- [ ] **Step 2: Riscrivere `src/NodeJDVideo.tsx`**
+- [ ] **Step 3: Riscrivere `src/NodeJDVideo.tsx`**
 
 ```tsx
 import React from "react";
@@ -2278,23 +2302,7 @@ import { wipe as wipePresentation } from "@remotion/transitions/wipe";
 import { Audio } from "@remotion/media";
 import { staticFile, interpolate, useVideoConfig } from "remotion";
 import { SCENES, TRANSITION_FRAMES, sceneFrames } from "./design/timing";
-import { Scene1Intro } from "./scenes/Scene1Intro";
-import { Scene2Solution } from "./scenes/Scene2Solution";
-import { Scene3Comparison } from "./scenes/Scene3Comparison";
-import { Scene4TimeSaving } from "./scenes/Scene4TimeSaving";
-import { Scene5Security } from "./scenes/Scene5Security";
-import { Scene6Applications } from "./scenes/Scene6Applications";
-import { Scene7CTA } from "./scenes/Scene7CTA";
-
-const COMPONENTS = {
-  problem: Scene1Intro,
-  solution: Scene2Solution,
-  comparison: Scene3Comparison,
-  timeSaving: Scene4TimeSaving,
-  security: Scene5Security,
-  applications: Scene6Applications,
-  cta: Scene7CTA,
-};
+import { SCENE_COMPONENTS } from "./scenes/registry";
 
 /**
  * fade sugli stacchi di capitolo, wipe fra scene che proseguono lo stesso
@@ -2320,7 +2328,7 @@ export const NodeJDVideo: React.FC = () => {
       />
       <TransitionSeries>
         {SCENES.map((scene, i) => {
-          const Component = COMPONENTS[scene.id];
+          const Component = SCENE_COMPONENTS[scene.id];
           const isLast = i === SCENES.length - 1;
           const useWipe = WIPE_AFTER.indexOf(scene.id) !== -1;
           return (
@@ -2346,7 +2354,7 @@ export const NodeJDVideo: React.FC = () => {
 };
 ```
 
-- [ ] **Step 3: Verificare i tipi e i test**
+- [ ] **Step 4: Verificare i tipi e i test**
 
 ```bash
 npm run lint
@@ -2364,7 +2372,7 @@ ls node_modules/@remotion/transitions/dist/esm/presentations/
 
 e usare il nome corretto (in alternativa `slide`).
 
-- [ ] **Step 4: Verificare la durata totale in studio**
+- [ ] **Step 5: Verificare la durata totale in studio**
 
 ```bash
 npm run dev
@@ -2372,10 +2380,10 @@ npm run dev
 
 Aprire `http://localhost:3000`, selezionare `NodeJDVideo` e verificare che la timeline riporti **2520 frame**. Chiudere lo studio.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/Root.tsx src/NodeJDVideo.tsx
+git add src/scenes/registry.ts src/Root.tsx src/NodeJDVideo.tsx
 git commit -m "feat(composition): durate da timing.ts e transizioni differenziate"
 ```
 

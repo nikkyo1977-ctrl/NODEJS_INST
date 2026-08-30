@@ -1,107 +1,101 @@
-import React from 'react';
-import {
-  AbsoluteFill,
-  Interactive,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-  spring,
-} from 'remotion';
-import { theme } from '../theme';
+import React from "react";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { Terminal, TerminalLine } from "../components/Terminal";
+import { DUR, fadeIn, pulse, wipe } from "../design/motion";
+import { color, space, type } from "../design/tokens";
+
+const INSTALL: TerminalLine[] = [
+  { kind: "command", text: "winget install OpenJS.NodeJS.LTS" },
+  { kind: "ok", text: "Node.js v22 LTS installed" },
+];
 
 export const Scene7CTA: React.FC = () => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const titleAt = 10;
+  const subtitleAt = 40;
+  const terminalAt = 90;
+  const taglineAt = 220;
 
-  // Glow pulse (sine wave-like)
-  const pulseOpacity = interpolate(
-    Math.sin((frame / fps) * Math.PI), 
-    [-1, 1], 
-    [0.1, 0.4], 
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-  );
-
-  const titleScale = spring({
-    frame: frame - 30,
-    fps,
-    config: { damping: 200 }, // Provided damping 200
-  });
-
-  const subtitleOpacity = interpolate(frame, [60, 90], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
-  const badgesScale = spring({
-    frame: frame - 90,
-    fps,
-    config: { damping: 14 },
-  });
-
-  const taglineOpacity = interpolate(frame, [120, 150], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
+  // la griglia si spegne mentre resta la chiusura
+  const gridFade = 1 - fadeIn(frame, 240, DUR.slow).opacity;
+  const gridImage =
+    "linear-gradient(to right, " +
+    color.line +
+    " 1px, transparent 1px), " +
+    "linear-gradient(to bottom, " +
+    color.line +
+    " 1px, transparent 1px)";
 
   return (
-    <AbsoluteFill style={{ backgroundColor: theme.bg, fontFamily: theme.fontMain, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      {/* Radial glow background */}
-      <div style={{
-        position: 'absolute',
-        width: '1000px',
-        height: '1000px',
-        borderRadius: '50%',
-        background: `radial-gradient(circle, ${theme.primary} 0%, transparent 60%)`,
-        opacity: 0.1,
-      }} />
+    <AbsoluteFill style={{ backgroundColor: color.bg }}>
+      <AbsoluteFill
+        style={{
+          backgroundImage: gridImage,
+          backgroundSize: "64px 64px",
+          opacity: 0.55 * gridFade,
+        }}
+      />
+      <AbsoluteFill
+        style={{
+          background:
+            "radial-gradient(circle at 50% 45%, " +
+            color.accentDim +
+            " 0%, transparent 55%)",
+          opacity: 0.35 + pulse(frame, 90) * 0.25,
+        }}
+      />
 
-      {/* Pulsing glow behind title */}
-      <Interactive.Div name="Glow" style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        translate: '-50% -50%',
-        width: '600px',
-        height: '200px',
-        background: theme.primary,
-        filter: 'blur(100px)',
-        opacity: pulseOpacity,
-      }} />
-
-      <Interactive.Div name="MainTitle" style={{ scale: String(titleScale), fontSize: '96px', color: '#ffffff', fontWeight: 'bold', marginBottom: '24px', zIndex: 1 }}>
-        Install Node.js.
-      </Interactive.Div>
-
-      <Interactive.Div name="Subtitle" style={{ opacity: subtitleOpacity, fontSize: '52px', color: theme.accent, marginBottom: '80px', zIndex: 1 }}>
-        Unlock the future of FEM automation.
-      </Interactive.Div>
-
-      <Interactive.Div name="Badges" style={{ scale: String(badgesScale), display: 'flex', gap: '32px', marginBottom: '100px', zIndex: 1 }}>
-        <div style={{
-          backgroundColor: theme.success,
-          color: '#ffffff',
-          fontSize: '48px',
-          fontWeight: 'bold',
-          padding: '16px 48px',
-          borderRadius: '100px',
-        }}>
-          Node.js
+      <AbsoluteFill
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: space.lg,
+          padding: 80,
+        }}
+      >
+        <div
+          style={{
+            ...type.display,
+            color: color.text,
+            ...wipe(frame, titleAt, DUR.slow),
+          }}
+        >
+          Install Node.js.
         </div>
-        <div style={{
-          backgroundColor: theme.primary,
-          color: '#ffffff',
-          fontSize: '48px',
-          fontWeight: 'bold',
-          padding: '16px 48px',
-          borderRadius: '100px',
-        }}>
-          Codex CLI
-        </div>
-      </Interactive.Div>
 
-      <Interactive.Div name="Tagline" style={{ opacity: taglineOpacity, fontSize: '44px', color: theme.textMuted, zIndex: 1, position: 'absolute', bottom: '100px' }}>
-        One install. Infinite possibilities.
-      </Interactive.Div>
+        <div
+          style={{
+            ...type.h2,
+            color: color.accent,
+            ...wipe(frame, subtitleAt),
+          }}
+        >
+          Unlock the future of FEM automation.
+        </div>
+
+        <div
+          style={{
+            width: 900,
+            marginTop: space.lg,
+            ...fadeIn(frame, terminalAt, DUR.base),
+          }}
+        >
+          <Terminal lines={INSTALL} startAt={terminalAt} title="workstation" />
+        </div>
+
+        <div
+          style={{
+            ...type.bodyLg,
+            color: color.textMute,
+            marginTop: space.lg,
+            ...wipe(frame, taglineAt),
+          }}
+        >
+          One install. Infinite possibilities.
+        </div>
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };

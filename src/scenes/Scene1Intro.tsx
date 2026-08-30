@@ -1,93 +1,132 @@
-import React from 'react';
-import { AbsoluteFill, Interactive, interpolate, useCurrentFrame, useVideoConfig, Easing } from 'remotion';
-import { theme } from '../theme';
+import React from "react";
+import { useCurrentFrame } from "remotion";
+import { SceneFrame, CONTENT_AT } from "../components/SceneFrame";
+import { Icon, IconName } from "../design/icons";
+import { DUR, pulse, STAGGER, wipe } from "../design/motion";
+import { color, radius, space, type } from "../design/tokens";
+
+const STEPS: { text: string; icon: IconName; isError?: boolean }[] = [
+  { text: "Open ChatGPT", icon: "cloud" },
+  { text: "Copy-paste code", icon: "document" },
+  { text: "Edit script manually", icon: "file" },
+  { text: "Run in Abaqus", icon: "cpu" },
+  { text: "Error? Repeat.", icon: "refresh", isError: true },
+];
 
 export const Scene1Intro: React.FC = () => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const firstStepAt = CONTENT_AT;
+  const loopAt = firstStepAt + STEPS.length * STAGGER.loose + DUR.base;
+  const subtitleAt = loopAt + DUR.slow;
 
-  const titleOpacity = interpolate(frame, [0, 30], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  
-  const titleTranslateY = interpolate(frame, [0, 30], [-50, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: Easing.bezier(0.16, 1, 0.3, 1),
-  });
-
-  const subtitleOpacity = interpolate(frame, [240, 270], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
-  const steps = [
-    { text: 'Open ChatGPT', emoji: '🧑‍💻' },
-    { text: 'Copy-paste code', emoji: '📋' },
-    { text: 'Edit script manually', emoji: '📝' },
-    { text: 'Run in Abaqus', emoji: '🔄' },
-    { text: 'Error? Repeat.', emoji: '❌', isError: true },
-  ];
-
-  const gridPattern = `repeating-linear-gradient(to right, ${theme.bgLight} 0, ${theme.bgLight} 1px, transparent 1px, transparent 50px),
-                       repeating-linear-gradient(to bottom, ${theme.bgLight} 0, ${theme.bgLight} 1px, transparent 1px, transparent 50px)`;
+  // secondo giro accelerato: il ciclo si rilegge, ed è questo il messaggio
+  const highlighted =
+    frame < loopAt ? -1 : Math.floor((frame - loopAt) / 8) % STEPS.length;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: theme.bg, backgroundImage: gridPattern, fontFamily: theme.fontMain, color: theme.text }}>
-      <Interactive.Div name="Title" style={{ position: 'absolute', top: 100, width: '100%', textAlign: 'center', opacity: titleOpacity, translate: `0 ${titleTranslateY}px` }}>
-        <h1 style={{ fontSize: 84, margin: 0, fontWeight: 'bold' }}>Your FEM Workflow Today</h1>
-      </Interactive.Div>
-
-      <Interactive.Div name="Workflow" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, marginTop: 180, marginBottom: 120 }}>
-        {steps.map((step, index) => {
-          const appearFrame = 30 + index * 40;
-          
-          const opacity = interpolate(frame, [appearFrame, appearFrame + 20], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-          const translateY = interpolate(frame, [appearFrame, appearFrame + 20], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.16, 1, 0.3, 1) });
-          
-          const pulse = step.isError ? (Math.sin(frame / 5) * 0.5 + 0.5) : 0;
-          const boxShadow = step.isError ? `0 0 ${10 + pulse * 20}px ${theme.danger}` : 'none';
-
-          return (
-            <React.Fragment key={index}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '12px 30px',
-                backgroundColor: theme.bgLight,
-                borderRadius: 16,
-                border: step.isError ? `2px solid ${theme.danger}` : `1px solid ${theme.textMuted}`,
-                boxShadow,
-                opacity,
-                translate: `0 ${translateY}px`,
-                margin: '4px 0',
-                minWidth: 400,
-                justifyContent: 'center',
-              }}>
-                <span style={{ fontSize: 36, marginRight: 20 }}>{step.emoji}</span>
-                <span style={{ fontSize: 36, color: step.isError ? theme.danger : theme.text }}>{step.text}</span>
+    <SceneFrame index={1} eyebrow="The Problem" title="Your FEM workflow today">
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          alignItems: "center",
+          gap: space.xxl,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: space.sm,
+            flex: 1,
+          }}
+        >
+          {STEPS.map((step, i) => {
+            const at = firstStepAt + i * STAGGER.loose;
+            const active = highlighted === i;
+            const glow = step.isError ? pulse(frame, 60) : 0;
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: space.md,
+                  padding: space.sm + "px " + space.lg + "px",
+                  backgroundColor: color.surface,
+                  border:
+                    "1px solid " +
+                    (step.isError
+                      ? color.bad
+                      : active
+                      ? color.accentDim
+                      : color.line),
+                  borderRadius: radius.md,
+                  boxShadow: step.isError
+                    ? "0 0 " + (12 + glow * 24) + "px " + color.bad + "40"
+                    : "none",
+                  ...wipe(frame, at),
+                }}
+              >
+                <Icon
+                  name={step.icon}
+                  size={38}
+                  color={step.isError ? color.bad : color.textMute}
+                  frame={frame}
+                  drawAt={at}
+                />
+                <span
+                  style={{
+                    ...type.bodyLg,
+                    color: step.isError ? color.bad : color.text,
+                  }}
+                >
+                  {step.text}
+                </span>
               </div>
-              
-              {index < steps.length - 1 && (
-                <div style={{
-                  opacity: interpolate(frame, [appearFrame + 20, appearFrame + 40], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-                  fontSize: 28,
-                  margin: '2px 0',
-                  color: theme.textMuted,
-                  translate: `0 ${interpolate(frame, [appearFrame + 20, appearFrame + 40], [10, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })}px`,
-                }}>
-                  ↓
-                </div>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </Interactive.Div>
+            );
+          })}
+        </div>
 
-      <Interactive.Div name="Subtitle" style={{ position: 'absolute', bottom: 60, width: '100%', textAlign: 'center', opacity: subtitleOpacity }}>
-        <p style={{ fontSize: 44, color: theme.textMuted, margin: 0 }}>Manual. Repetitive. Error-prone.</p>
-      </Interactive.Div>
-    </AbsoluteFill>
+        {/* l'anello che chiude il ciclo: dall'ultimo passo torna al primo */}
+        <div
+          style={{
+            flex: "none",
+            width: 160,
+            height: 420,
+            position: "relative",
+            ...wipe(frame, loopAt),
+          }}
+        >
+          <svg width={160} height={420} viewBox="0 0 160 420" fill="none">
+            <path
+              d="M0 390 H120 A40 40 0 0 0 120 30 H0"
+              pathLength="1"
+              stroke={color.bad}
+              strokeWidth={3}
+              strokeDasharray={1}
+              strokeDashoffset={Math.max(0, 1 - (frame - loopAt) / DUR.slow)}
+              fill="none"
+            />
+            <path
+              d="M0 30 l18 -10 M0 30 l18 10"
+              stroke={color.bad}
+              strokeWidth={3}
+              pathLength="1"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <div
+        style={{
+          ...type.h2,
+          color: color.textMute,
+          ...wipe(frame, subtitleAt),
+        }}
+      >
+        Manual. Repetitive. Error-prone.
+      </div>
+    </SceneFrame>
   );
 };

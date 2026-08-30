@@ -7,6 +7,7 @@
   "private": true,
   "dependencies": {
     "@remotion/cli": "4.0.518",
+    "@remotion/google-fonts": "4.0.518",
     "@remotion/media": "4.0.518",
     "@remotion/tailwind-v4": "4.0.518",
     "@remotion/transitions": "4.0.518",
@@ -18,15 +19,18 @@
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.518",
     "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.5",
     "@types/web": "0.0.166",
     "eslint": "9.19.0",
     "prettier": "3.8.1",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
   },
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
+    "test": "vitest run",
     "lint": "eslint src && tsc"
   },
   "sideEffects": [

@@ -1,88 +1,77 @@
-import React from 'react';
-import {
-  AbsoluteFill,
-  Interactive,
-  interpolate,
-  useCurrentFrame,
-  useVideoConfig,
-  Easing,
-} from 'remotion';
-import { theme } from '../theme';
+import React from "react";
+import { useCurrentFrame } from "remotion";
+import { SceneFrame, CONTENT_AT } from "../components/SceneFrame";
+import { Icon, IconName } from "../design/icons";
+import { DUR, STAGGER, wipe } from "../design/motion";
+import { color, radius, space, type } from "../design/tokens";
 
-const items = [
-  { emoji: '🔧', text: 'Automated mesh generation' },
-  { emoji: '🚀', text: 'Batch simulation launches' },
-  { emoji: '📊', text: 'Automated post-processing & reporting' },
-  { emoji: '🔄', text: 'Parametric studies via scripted pipelines' },
-  { emoji: '🤖', text: 'AI-assisted debugging of .inp files' },
-  { emoji: '📦', text: 'End-to-end: mesh → simulate → results' },
-  { emoji: '🛠️', text: 'Custom CLI tools for your team' },
-  { emoji: '📡', text: 'Real-time log monitoring & alerts' },
-  { emoji: '📄', text: 'Auto-generated HTML/PDF reports' },
+const ITEMS: { icon: IconName; text: string }[] = [
+  { icon: "wrench", text: "Automated mesh generation" },
+  { icon: "package", text: "Batch simulation launches" },
+  { icon: "chart", text: "Post-processing & reporting" },
+  { icon: "refresh", text: "Parametric studies" },
+  { icon: "robot", text: "AI-assisted .inp debugging" },
+  { icon: "cpu", text: "Mesh → simulate → results" },
+  { icon: "terminal", text: "Custom CLI tools for your team" },
+  { icon: "bell", text: "Real-time log monitoring" },
+  { icon: "document", text: "Auto-generated PDF reports" },
 ];
+
+const COLS = 3;
 
 export const Scene6Applications: React.FC = () => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const titleOpacity = interpolate(frame, [10, 30], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: theme.bg, fontFamily: theme.fontMain, padding: '70px 80px', display: 'flex', flexDirection: 'column' }}>
-      <Interactive.Div name="Title" style={{ opacity: titleOpacity, fontSize: '76px', color: theme.accent, fontWeight: 'bold', marginBottom: '36px', textAlign: 'center' }}>
-        Unlocked Capabilities
-      </Interactive.Div>
-
-      <Interactive.Div
-        name="Grid"
+    <SceneFrame
+      index={6}
+      eyebrow="Capabilities"
+      title="What this unlocks"
+      command="$ npm run simulate -- --batch"
+      commandAt={CONTENT_AT + 200}
+    >
+      <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '16px 28px',
-          width: '100%',
-          maxWidth: '1600px',
-          margin: '0 auto',
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: space.md,
+          flex: 1,
+          alignContent: "center",
         }}
       >
-        {items.map((item, index) => {
-          const startFrame = 20 + index * 35;
-          const itemProgress = interpolate(frame, [startFrame, startFrame + 25], [0, 1], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-            easing: Easing.bezier(0.16, 1, 0.3, 1),
-          });
-          
-          const translateX = interpolate(frame, [startFrame, startFrame + 25], [100, 0], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-            easing: Easing.bezier(0.16, 1, 0.3, 1),
-          });
-
+        {ITEMS.map((item, i) => {
+          // onda diagonale: la colonna scala di tight, la riga di loose
+          const col = i % COLS;
+          const row = Math.floor(i / COLS);
+          const at = CONTENT_AT + col * STAGGER.tight + row * STAGGER.loose;
           return (
-            <Interactive.Div
-              key={index}
-              name={`Item-${index}`}
+            <div
+              key={i}
               style={{
-                opacity: itemProgress,
-                translate: `${translateX}px 0px`,
-                display: 'flex',
-                alignItems: 'center',
-                backgroundColor: theme.bgLight,
-                borderRadius: '14px',
-                padding: '14px 20px',
-                borderLeft: `6px solid ${theme.accent}`,
-                boxShadow: `0 4px 20px rgba(0,0,0,0.3)`,
+                display: "flex",
+                alignItems: "center",
+                gap: space.md,
+                backgroundColor: color.surface,
+                border: "1px solid " + color.line,
+                borderRadius: radius.md,
+                padding: space.md,
+                ...wipe(frame, at, DUR.base),
               }}
             >
-              <span style={{ fontSize: '38px', marginRight: '16px' }}>{item.emoji}</span>
-              <span style={{ fontSize: '30px', color: theme.text, fontWeight: '500' }}>{item.text}</span>
-            </Interactive.Div>
+              <Icon
+                name={item.icon}
+                size={34}
+                color={color.accent}
+                frame={frame}
+                drawAt={at}
+              />
+              <span style={{ ...type.body, color: color.text }}>
+                {item.text}
+              </span>
+            </div>
           );
         })}
-      </Interactive.Div>
-    </AbsoluteFill>
+      </div>
+    </SceneFrame>
   );
 };
